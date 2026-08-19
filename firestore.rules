@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Default deny all documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profile documents
+    match /users/{userId} {
+      // Users can only read their own profile
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      // Users can create their own profile with validated initial defaults
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email is string
+                    && (request.resource.data.role == 'user')
+                    && (request.resource.data.plan == 'free');
+
+      // Users can update their own profile, but cannot mutate protected fields (uid, role, plan, createdAt)
+      allow update: if isOwner(userId)
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.plan == resource.data.plan
+                    && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Deletions are forbidden from client
+      allow delete: if false;
+
+      // User Datasets (Phase 5)
+      match /datasets/{datasetId} {
+        // Users can only read, list, create, update, and delete their own datasets
+        allow read: if isOwner(userId);
+        
+        // Creation requires valid fields and matching owner/datasetId
+        allow create: if isOwner(userId)
+                      && request.resource.data.userId == userId
+                      && request.resource.data.datasetId == datasetId
+                      && request.resource.data.name is string
+                      && request.resource.data.originalFileName is string
+                      && request.resource.data.fileType in ['csv', 'xlsx', 'xls']
+                      && request.resource.data.storagePath is string
+                      && request.resource.data.status in ['uploaded', 'not_profiled', 'profiling', 'profiled', 'failed', 'ready'];
+
+        // Updating allows name, status, qualityScore, and updatedAt changes, but protects immutable metadata
+        allow update: if isOwner(userId)
+                      && request.resource.data.userId == resource.data.userId
+                      && request.resource.data.datasetId == resource.data.datasetId
+                      && request.resource.data.storagePath == resource.data.storagePath
+                      && request.resource.data.createdAt == resource.data.createdAt;
+
+        // Allows owner to delete their dataset metadata
+        allow delete: if isOwner(userId);
+
+        // Dataset Profile Subcollection (Phase 6)
+        match /profile/{profileDoc} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // Anomalies Subcollection (Phase 9)
+        match /anomalies/{anomalyDoc} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // Root Cause Analyses Subcollection (Phase 10)
+        match /rootCauses/{rcaDoc} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // Forecasts & Predictive Analytics Subcollection (Phase 11)
+        match /forecasts/{forecastDoc} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // Reports Subcollection (Phase 12)
+        match /reports/{reportId} {
+          allow read, write: if isOwner(userId);
+
+          match /sections/{sectionId} {
+            allow read, write: if isOwner(userId);
+          }
+        }
+      }
+
+      // Alert Rules (Phase 13)
+      match /alertRules/{ruleId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Alert Instances (Phase 13)
+      match /alerts/{alertId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // In-App Notifications (Phase 13)
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Notification Preferences & Quiet Hours (Phase 13)
+      match /alertPreferences/{prefId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Shared Reports with Token Expiration & Revocation (Phase 12)
+    match /sharedReports/{shareToken} {
+      allow get: if resource.data.revoked == false && (resource.data.expiresAt == null || request.time < resource.data.expiresAt);
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.creatorUserId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.creatorUserId == request.auth.uid;
+    }
+
+    // Organizations and Subcollections (Phase 4+ architecture)
+    match /organizations/{orgId} {
+      function isOrgMember() {
+        return isAuthenticated() && exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+      }
+
+      function isOrgOwner() {
+        return isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      }
+
+      allow read: if isOrgMember() || isOrgOwner();
+      allow write: if isOrgOwner();
+
+      match /members/{memberId} {
+        allow read: if isOrgMember() || isOrgOwner();
+        allow write: if isOrgOwner();
+      }
+
+      match /datasets/{datasetId} {
+        allow read, write: if isOrgMember() || isOrgOwner();
+      }
+
+      match /analyses/{analysisId} {
+        allow read, write: if isOrgMember() || isOrgOwner();
+      }
+
+      match /reports/{reportId} {
+        allow read, write: if isOrgMember() || isOrgOwner();
+      }
+
+      match /alerts/{alertId} {
+        allow read, write: if isOrgMember() || isOrgOwner();
+      }
+
+      match /auditLogs/{logId} {
+        allow read: if isOrgMember() || isOrgOwner();
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "InsightAI - AI Data Analyst Agent",
+  "description": "Turn your data into decisions with an intelligent AI data analyst agent that investigates trends, anomalies, root causes, statistical forecasts, automated monitoring alerts, and generates executive business intelligence reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

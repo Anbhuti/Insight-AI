@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // User-scoped dataset uploads: users/{uid}/datasets/{datasetId}/{fileName}
+    match /users/{userId}/datasets/{datasetId}/{fileName} {
+      // Allow read/write only if the authenticated user matches the userId path
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId
+                    && request.resource.size <= 25 * 1024 * 1024; // 25 MB max
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

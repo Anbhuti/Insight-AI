@@ -1,0 +1,476 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile document storing identity, role, plan, and authentication provider details.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User full name or display handle."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Primary email address associated with the user account."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar photo URL from Google or custom upload."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Authentication provider identifier (e.g. password, google.com)."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin"],
+          "description": "Authorization level within InsightAI."
+        },
+        "plan": {
+          "type": "string",
+          "enum": ["free", "starter", "pro", "enterprise"],
+          "description": "Active subscription tier."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the profile was first registered."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last profile modification."
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the most recent authentication session."
+        }
+      },
+      "required": ["uid", "email", "role", "plan", "createdAt"]
+    },
+    "Organization": {
+      "title": "Organization",
+      "description": "Workspace organization entity grouping datasets, analyses, and team members.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique organization ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Company or workspace name."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the workspace owner."
+        },
+        "plan": {
+          "type": "string",
+          "enum": ["free", "starter", "pro", "enterprise"],
+          "description": "Organization subscription level."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Workspace creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Workspace update timestamp."
+        }
+      },
+      "required": ["id", "name", "ownerId", "plan", "createdAt"]
+    },
+    "OrganizationMember": {
+      "title": "OrganizationMember",
+      "description": "Team member relationship record within an organization.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Member relationship document ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the team member."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "admin", "analyst", "viewer"],
+          "description": "Role and access tier within the workspace."
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the member was added."
+        }
+      },
+      "required": ["id", "userId", "role", "joinedAt"]
+    },
+    "Dataset": {
+      "title": "Dataset",
+      "description": "Connected or uploaded data asset for automated analysis.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique dataset identifier."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Organization reference ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the dataset."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional notes or schema summary."
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["csv", "excel", "database", "google_sheets", "api"],
+          "description": "Data ingestion format."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Original file name if uploaded."
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "File size in bytes."
+        },
+        "rowCount": {
+          "type": "number",
+          "description": "Total ingested rows."
+        },
+        "columnCount": {
+          "type": "number",
+          "description": "Total columns recognized."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["uploading", "processing", "ready", "failed"],
+          "description": "Ingestion lifecycle status."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "UID of creator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp."
+        }
+      },
+      "required": ["id", "organizationId", "name", "sourceType", "status", "createdBy", "createdAt"]
+    },
+    "Analysis": {
+      "title": "Analysis",
+      "description": "AI investigation or query execution entity.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique analysis ID."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Organization reference ID."
+        },
+        "datasetId": {
+          "type": "string",
+          "description": "Target dataset ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "User UID who submitted the investigation."
+        },
+        "question": {
+          "type": "string",
+          "description": "Natural language query or analysis request."
+        },
+        "analysisType": {
+          "type": "string",
+          "enum": ["trend", "anomaly", "root_cause", "forecast", "summary", "custom"],
+          "description": "Category of analytical job."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "running", "completed", "failed"],
+          "description": "Execution status."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Job submission timestamp."
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Completion timestamp."
+        }
+      },
+      "required": ["id", "organizationId", "datasetId", "userId", "question", "analysisType", "status", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Narrative intelligence brief generated for leadership.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique report ID."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Organization reference ID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Report title."
+        },
+        "analysisId": {
+          "type": "string",
+          "description": "Optional originating analysis ID."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Author UID."
+        },
+        "reportType": {
+          "type": "string",
+          "enum": ["executive", "analytics", "anomaly", "forecast", "custom"],
+          "description": "Type of publication."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published", "archived"],
+          "description": "Document status."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "Exported PDF or document URL."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last modified timestamp."
+        }
+      },
+      "required": ["id", "organizationId", "title", "createdBy", "reportType", "status", "createdAt"]
+    },
+    "Alert": {
+      "title": "Alert",
+      "description": "Real-time surveillance alert trigger specification.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique alert ID."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Organization reference ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Alert rule label."
+        },
+        "description": {
+          "type": "string",
+          "description": "Trigger explanation."
+        },
+        "metric": {
+          "type": "string",
+          "description": "Target monitored KPI."
+        },
+        "condition": {
+          "type": "string",
+          "enum": ["above", "below", "change_pct", "anomaly"],
+          "description": "Trigger evaluation logic."
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Numerical threshold boundary."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "paused"],
+          "description": "Monitoring state."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Configurator UID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Rule creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Rule update timestamp."
+        }
+      },
+      "required": ["id", "organizationId", "name", "metric", "condition", "threshold", "status", "createdBy", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security and audit record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique audit log ID."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Organization reference ID."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Actor UID."
+        },
+        "action": {
+          "type": "string",
+          "description": "Performed operation (e.g. login, dataset.create, export.report)."
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "Affected resource category."
+        },
+        "resourceId": {
+          "type": "string",
+          "description": "Affected entity identifier."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Audit record timestamp."
+        }
+      },
+      "required": ["id", "organizationId", "userId", "action", "resourceType", "resourceId", "createdAt"]
+    },
+    "DatasetProfile": {
+      "title": "DatasetProfile",
+      "description": "Computed statistical profile, data quality metrics, column schemas, and detected issues for a dataset.",
+      "type": "object",
+      "properties": {
+        "datasetId": {
+          "type": "string",
+          "description": "Reference ID of the profiled dataset."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the dataset owner."
+        },
+        "profileVersion": {
+          "type": "number",
+          "description": "Schema version of the profile engine."
+        },
+        "rowCount": {
+          "type": "number",
+          "description": "Total analyzed rows in dataset."
+        },
+        "columnCount": {
+          "type": "number",
+          "description": "Total analyzed columns in dataset."
+        },
+        "duplicateRowCount": {
+          "type": "number",
+          "description": "Detected exact duplicate row count."
+        },
+        "duplicateRowPercentage": {
+          "type": "number",
+          "description": "Percentage of duplicate rows."
+        },
+        "missingCellCount": {
+          "type": "number",
+          "description": "Total missing or blank cells."
+        },
+        "missingCellPercentage": {
+          "type": "number",
+          "description": "Percentage of missing cells across all cells."
+        },
+        "qualityScore": {
+          "type": "number",
+          "description": "Deterministic composite data quality score from 0 to 100."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["not_profiled", "profiling", "profiled", "failed"],
+          "description": "Profiling lifecycle state."
+        },
+        "profiledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the profile was generated."
+        }
+      },
+      "required": ["datasetId", "userId", "profileVersion", "rowCount", "columnCount", "qualityScore", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "User profile document storing individual identity, role, and subscription tier."
+    },
+    "/users/{userId}/datasets/{datasetId}": {
+      "schema": "#/entities/Dataset",
+      "description": "User uploaded or connected datasets."
+    },
+    "/users/{userId}/datasets/{datasetId}/profile/{profileId}": {
+      "schema": "#/entities/DatasetProfile",
+      "description": "Data profiling results, quality score, column stats, and issue recommendations."
+    },
+    "/organizations/{orgId}": {
+      "schema": "#/entities/Organization",
+      "description": "Workspace organization metadata."
+    },
+    "/organizations/{orgId}/members/{memberId}": {
+      "schema": "#/entities/OrganizationMember",
+      "description": "Members belonging to an organization."
+    },
+    "/organizations/{orgId}/datasets/{datasetId}": {
+      "schema": "#/entities/Dataset",
+      "description": "Data sources connected or uploaded to the organization."
+    },
+    "/organizations/{orgId}/analyses/{analysisId}": {
+      "schema": "#/entities/Analysis",
+      "description": "AI analysis queries and execution statuses."
+    },
+    "/organizations/{orgId}/reports/{reportId}": {
+      "schema": "#/entities/Report",
+      "description": "Generated intelligence briefs and reports."
+    },
+    "/organizations/{orgId}/alerts/{alertId}": {
+      "schema": "#/entities/Alert",
+      "description": "Metric anomaly alerts and thresholds."
+    },
+    "/organizations/{orgId}/auditLogs/{logId}": {
+      "schema": "#/entities/AuditLog",
+      "description": "Security and action audit logs."
+    }
+  }
+}
